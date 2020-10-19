@@ -6,6 +6,11 @@ module Test.Chapter1
 
 import Test.Hspec (Spec, describe, it, shouldBe)
 
+import qualified Hedgehog.Range as Range (linear)
+import qualified Hedgehog.Gen as Gen (int)
+
+import Test.Hspec.Hedgehog (hedgehog, (===), forAll)
+
 import Chapter1
 
 
@@ -13,6 +18,9 @@ chapter1 :: Spec
 chapter1 = describe "Chapter1" $ do
     chapter1normal
     chapter1advanced
+
+reverseInt :: Int -> Int
+reverseInt x = (*) (signum x) . read . reverse . show . abs  $ x
 
 chapter1normal :: Spec
 chapter1normal = describe "Chapter1Normal" $ do
@@ -40,8 +48,10 @@ chapter1normal = describe "Chapter1Normal" $ do
     describe "Task7: mid" $ do
         it "positives up  " $ mid 10 20 30 `shouldBe` 20
         it "positives down" $ mid 30 20 10 `shouldBe` 20
+        it "positives mix " $ mid 20 30 10 `shouldBe` 20
         it "negatives down" $ mid (-10) (-20) (-30) `shouldBe` (-20)
         it "negatives up  " $ mid (-30) (-20) (-10) `shouldBe` (-20)
+        it "negatives mix " $ mid (-20) (-30) (-10) `shouldBe` (-20)
         it "all equal" $ mid 1 1 1 `shouldBe` 1
         it "all equal, except 1" $ mid 1 1 2 `shouldBe` 1
     describe "Task8: isVowel" $ do
@@ -56,14 +66,19 @@ chapter1normal = describe "Chapter1Normal" $ do
         it "sumLast2 0 > -10" $ sumLast2 (-9) `shouldBe` 9
         it "sumLast2 -10 > -100" $ sumLast2 (-56) `shouldBe` 11
         it "sumLast2 -100 > -1000" $ sumLast2 (-987) `shouldBe` 15
+    describe "Task 4 & 5 : first and last digit" $ do
+        it "last digit is the first digit of the reversed number" $ hedgehog $ do
+            x <- forAll $ Gen.int (Range.linear (-200) 200)
+            (firstDigit x :: Int) === (lastDigit (reverseInt x) :: Int)
 
 chapter1advanced :: Spec
-chapter1advanced = describe "Chapter1Advanced" $ do
-    it "first digit 0" $ firstDigit 0 `shouldBe` 0
-    it "first digit 0 < 10" $ firstDigit 9 `shouldBe` 9
-    it "first digit 10 < 100" $ firstDigit 58 `shouldBe` 5
-    it "first digit 100 < 1000" $ firstDigit 158 `shouldBe` 1
-    it "first digit big" $ firstDigit 467321 `shouldBe` 4
-    it "first digit 0 > -10" $ firstDigit (-9) `shouldBe` 9
-    it "first digit -10 > -100" $ firstDigit (-58) `shouldBe` 5
-    it "first digit -100 > -1000" $ firstDigit (-158) `shouldBe` 1
+chapter1advanced = describe "Chapter1Advanced" $
+    describe "Task 10*" $ do
+        it "first digit 0" $ firstDigit 0 `shouldBe` 0
+        it "first digit 0 < 10" $ firstDigit 9 `shouldBe` 9
+        it "first digit 10 < 100" $ firstDigit 58 `shouldBe` 5
+        it "first digit 100 < 1000" $ firstDigit 158 `shouldBe` 1
+        it "first digit big" $ firstDigit 467321 `shouldBe` 4
+        it "first digit 0 > -10" $ firstDigit (-9) `shouldBe` 9
+        it "first digit -10 > -100" $ firstDigit (-58) `shouldBe` 5
+        it "first digit -100 > -1000" $ firstDigit (-158) `shouldBe` 1
